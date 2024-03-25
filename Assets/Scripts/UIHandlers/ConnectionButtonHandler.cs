@@ -20,6 +20,8 @@ namespace UIHandlers
         {
             _clientService.ConnectToServer();
             _playersFactory.CreateLocalPlayers();
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
         }
     }
 }

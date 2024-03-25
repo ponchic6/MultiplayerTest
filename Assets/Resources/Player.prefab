@@ -47,7 +47,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 3
-  _sensetive: 1
+  _camera: {fileID: 5352814291338973985}
+  _sensetiveX: 1
+  _sensetiveY: 1
 --- !u!114 &7614279844111251906
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -6,7 +6,7 @@ namespace Services
     public interface IClientService
     {
         public event Action<string> OnRecievedMessage;
-        public void SendPosition(Vector3 transformPosition);
+        public void SendPosition(string transformJSON);
         public void ConnectToServer();
     }
 }

@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using JetBrains.Annotations;
+using Network;
 using UnityEngine;
 
 namespace Services
@@ -11,7 +12,7 @@ namespace Services
     {
         public event Action<string> OnRecievedMessage;
 
-        [CanBeNull] private string _recievedMessage;
+        private Queue<string> _recievedMessage = new Queue<string>();
         private TcpClient _client;
         private StreamWriter _streamWriter;
         private StreamReader _streamReader;
@@ -35,40 +36,46 @@ namespace Services
             _streamWriter = new StreamWriter(_client.GetStream());
             _streamReader = new StreamReader(_client.GetStream());
             
-            Debug.Log("Connected to server...");
+            Debug.Log($"Connected to {_client.Client.RemoteEndPoint}");
 
             _idOnServer = int.Parse(_streamReader.ReadLine());
 
             Task.Run(StartListen);
         }
 
-        private void DisconnectFromServer()
+        public void SendPosition(string transformJson)
         {
-            _client.Close();
-        }
-
-        public void SendPosition(Vector3 transformPosition)
-        {
-            string stringPosition = transformPosition.x + ", " +
-                                    transformPosition.y + ", " + transformPosition.z; 
-            _streamWriter.WriteLine(stringPosition);
+            _streamWriter.WriteLine(transformJson);
             _streamWriter.Flush();
         }
 
         private async Task StartListen()
         {
             while (true)
-            {
-                _recievedMessage = await _streamReader.ReadLineAsync();
+            { 
+                _recievedMessage.Enqueue(await _streamReader.ReadLineAsync());
             }
         }
 
         private void TryInvokeOnRecievedMessage()
         {
-            if (_recievedMessage == null) return;
-            
-            OnRecievedMessage?.Invoke(_recievedMessage);
-            _recievedMessage = null;
+            if (_recievedMessage.Count == 0) return;
+
+            while (_recievedMessage.Count != 0)
+            {
+                string message = _recievedMessage.Dequeue();
+
+                if (message != null)
+                {   
+                    Debug.Log(DateTime.Now);
+                    OnRecievedMessage?.Invoke(message);
+                }
+            }
+        }
+
+        private void DisconnectFromServer()
+        {
+            _client.Close();
         }
     }
 }

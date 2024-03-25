@@ -1,4 +1,4 @@
-using System;
+using Newtonsoft.Json;
 using Services;
 using UnityEngine;
 using Zenject;
@@ -16,8 +16,13 @@ namespace Network
         }
 
         private void FixedUpdate()
-        {
-            _clientService.SendPosition(transform.position);
+        {       
+            TransformProperties transformProperties =
+                new TransformProperties(transform.position, transform.rotation);
+            
+            string transformJson = JsonUtility.ToJson(transformProperties);
+            
+            _clientService.SendPosition(transformJson);
         }
     }
 }

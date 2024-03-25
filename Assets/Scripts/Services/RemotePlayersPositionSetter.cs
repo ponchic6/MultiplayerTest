@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using Network;
+using UnityEngine;
 
 namespace Services
 {
@@ -8,7 +10,10 @@ namespace Services
         private readonly IClientService _clientService;
         private readonly IPlayersFactory _playersFactory;
 
+        private Vector3String _newPositionString;
+        private QuaternionString _newRotationString;
         private Vector3 _newPosition;
+        private Quaternion _newRotation;
         private int _id;
 
         public RemotePlayersPositionSetter(IRemotePlayersStorageService remotePlayersStorageService,
@@ -28,6 +33,7 @@ namespace Services
             if (_remotePlayersStorageService.PlayersDictionary.TryGetValue(_id, out Transform remotePlayerTransform))
             {
                 remotePlayerTransform.position = _newPosition;
+                remotePlayerTransform.rotation = _newRotation;
             }
 
             else
@@ -38,10 +44,28 @@ namespace Services
 
         private void ParseMessage(string message)
         {
-            string[] _recievedMessage = message.Split(", ");
-            _newPosition = new Vector3(float.Parse(_recievedMessage[0]),
-                float.Parse(_recievedMessage[1]), float.Parse(_recievedMessage[2]));
-            _id = int.Parse(_recievedMessage[3]);
+            try
+            {   
+                TransformProperties transformProperties = JsonUtility.FromJson<TransformProperties>(message);
+                _newPositionString = transformProperties.Position;
+                _newRotationString = transformProperties.Rotation;
+                
+                _newPosition = new Vector3(float.Parse(_newPositionString.x),
+                    float.Parse(_newPositionString.y),
+                    float.Parse(_newPositionString.z));
+                _newRotation = new Quaternion(float.Parse(_newRotationString.x),
+                    float.Parse(_newRotationString.y),
+                    float.Parse(_newRotationString.z),
+                    float.Parse(_newRotationString.w));
+                
+                _id = transformProperties.Id;
+            }
+            
+            catch (Exception exception)
+            {
+                Debug.Log(message);
+                throw;
+            }
         }
     }
 }
